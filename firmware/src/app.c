@@ -129,7 +129,8 @@ void APP_ReceiveMessage_Tasks()
     {
         DRV_CANFDSPI_ReceiveMessageGet(DRV_CANFDSPI_INDEX_0, APP_RX_FIFO, &canMsg->msgObj.rxObj, canMsg->can_data, MAX_DATA_BYTES);
 #ifdef ENABLE_CONSOLE_PRINT
-        SYS_CONSOLE_PRINT("New Message Received from CAN BUS\r\nMessage ID: 0x%X, DLC: 0x%X\r\nMessage: ", canMsg->msgObj.rxObj.bF.id.SID, canMsg->msgObj.rxObj.bF.ctrl.DLC);
+        SYS_CONSOLE_PRINT("New Message Received from CAN BUS\r\nMessage ID: 0x%X, DLC: 0x%X\r\nMessage: ", (canMsg->msgObj.rxObj.bF.id.EID + canMsg->msgObj.rxObj.bF.id.SID), canMsg->msgObj.rxObj.bF.ctrl.DLC);
+
         for(uint8_t i = 0; i<canMsg->msgObj.rxObj.bF.ctrl.DLC; i++)
         {
             SYS_CONSOLE_PRINT(" 0x%X",canMsg->can_data[i]);
@@ -186,17 +187,18 @@ void APP_CANFDSPI_Init()
 
     // Setup RX Filter
     fObj.word = 0;
-    fObj.bF.SID = 0xda;
-    fObj.bF.EXIDE = 0;
-    fObj.bF.EID = 0x00;
+    fObj.bF.SID = 0x7FF; // Standard Identifier filter bits
+    fObj.bF.EXIDE = 0; // Match only messages with extended identifier
+    fObj.bF.EID = 0x3FFFF; // Extended Identifier filter bits
 
     DRV_CANFDSPI_FilterObjectConfigure(DRV_CANFDSPI_INDEX_0, CAN_FILTER0, &fObj.bF);
 
     // Setup RX Mask
     mObj.word = 0;
-    mObj.bF.MSID = 0x0;
-    mObj.bF.MIDE = 1; // Only allow standard IDs
-    mObj.bF.MEID = 0x0;
+    mObj.bF.MSID = 0x0; // Standard Identifier Mask bits
+    mObj.bF.MEID = 0x0; // Extended Identifier Mask bits
+    mObj.bF.MIDE = 0; // Match both standard and extended message frames if filters match
+
     DRV_CANFDSPI_FilterMaskConfigure(DRV_CANFDSPI_INDEX_0, CAN_FILTER0, &mObj.bF);
 
     // Link FIFO and Filter
@@ -288,7 +290,7 @@ void APP_TransmitMessageQueue(CAN_MSG_t *canMsg)
     DRV_CANFDSPI_TransmitChannelLoad(DRV_CANFDSPI_INDEX_0, APP_TX_FIFO, &canMsg->msgObj.txObj, canMsg->can_data, n, true);
     GREEN_LED_Clear();
 #ifdef ENABLE_CONSOLE_PRINT
-    SYS_CONSOLE_PRINT("New Message Received from BLE\r\nMessage ID: 0x%X, DLC: 0x%X\r\nMessage: ", canMsg->msgObj.txObj.bF.id.SID, canMsg->msgObj.txObj.bF.ctrl.DLC);
+    SYS_CONSOLE_PRINT("New Message Received from BLE\r\nMessage ID: 0x%X, DLC: 0x%X\r\nMessage: ", (canMsg->msgObj.txObj.bF.id.EID + canMsg->msgObj.txObj.bF.id.SID), canMsg->msgObj.txObj.bF.ctrl.DLC);
     for(uint8_t i = 0; i<canMsg->msgObj.txObj.bF.ctrl.DLC; i++)
     {
         SYS_CONSOLE_PRINT(" 0x%X",canMsg->can_data[i]);

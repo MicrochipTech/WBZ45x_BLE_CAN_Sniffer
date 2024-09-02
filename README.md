@@ -185,9 +185,23 @@ Embedded software development tools need to be installed in order to properly pr
 
         <img src=".//media/PCAN-View_StandardMesg.png" width=400/>
 
-7. Confirm that the same periodic CAN message transmissions are received and displayed in the Microchip Bluetooth Data (MBD) smartphone app.
+7. Confirm that the **standard** CAN message transmissions are received and displayed in the Microchip Bluetooth Data (MBD) smartphone app.
 
-    <img src=".//media/MBD_APP_Characteristics.png" width=300/>
+    <img src=".//media/MBD_APP_Characteristics_Standard.png" width=300/>
+
+8. Create/transmit a new **extended frame** CAN message by selecting `File > New Message` in the PCAN-View's main toolbar. In the **New Transmit Message** pop-up window:
+
+    - Enter an ID that's greater than or equal to 0x10000
+    - Select the number of data bytes in the message and set the value of each byte as desired
+    - Under Message Type, ensure that the 3 boxes checked are `Extended Frame`, `CAN FD`, and `Bit Rate Switch`
+    - Enter a cycle time to send out the same message periodically (in milliseconds)
+    - Click on the OK button to start the transmission of repeating messages
+
+        <img src=".//media/PCAN-View_ExtendedMesg.png" width=400/>
+
+9. Confirm that the **extended frame** CAN message transmissions are received and displayed in the Microchip Bluetooth Data (MBD) smartphone app.
+
+    <img src=".//media/MBD_APP_Characteristics_Extended.png" width=300/>
 
 The following video shows the overall process of connecting to the Smartphone and viewing messages received on the CAN bus connected to the BLE SoC:
 
