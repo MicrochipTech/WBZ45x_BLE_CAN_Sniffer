@@ -75,6 +75,10 @@ extern "C" {
 // *****************************************************************************
 // *****************************************************************************
 
+#define ENABLE_CONSOLE_PRINT
+    
+#define LED_PULSE_DELAY_MSEC 200
+
 #define MAX_TXQUEUE_ATTEMPTS        10
 #define DRV_CANFDSPI_INDEX_0        canSPIHandle
 
@@ -83,7 +87,15 @@ extern "C" {
 
 // Receive Channels
 #define APP_RX_FIFO CAN_FIFO_CH1
-    
+
+typedef struct CAN_MSG_t {
+    union {
+        CAN_TX_MSGOBJ txObj;
+        CAN_RX_MSGOBJ rxObj;
+    }msgObj;
+    uint8_t can_data[MAX_DATA_BYTES];
+}CAN_MSG_t;
+
 // *****************************************************************************
 /* Application states
 
@@ -161,6 +173,8 @@ extern APP_DATA appData;
 // Section: Application Initialization and State Machine Functions
 // *****************************************************************************
 // *****************************************************************************
+
+void APP_TransmitMessageQueue(CAN_MSG_t *canMsg);
 
 /*******************************************************************************
   Function:

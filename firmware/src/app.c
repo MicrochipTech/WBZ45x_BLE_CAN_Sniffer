@@ -57,8 +57,6 @@
 #include "app_ble.h"
 #include "ble_trsps/ble_trsps.h"
 
-#define ENABLE_CONSOLE_PRINT
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -67,15 +65,6 @@
 
 uint16_t conn_hdl;
 DRV_HANDLE canSPIHandle = DRV_HANDLE_INVALID;
-
-typedef struct CAN_MSG_t {
-    union {
-        CAN_TX_MSGOBJ txObj;
-        CAN_RX_MSGOBJ rxObj;
-    }msgObj;
-    uint8_t can_data[MAX_DATA_BYTES];
-}CAN_MSG_t;
-
 bool ramInitialized = false;
 
 // *****************************************************************************
@@ -110,6 +99,74 @@ APP_DATA appData;
 // *****************************************************************************
 // *****************************************************************************
 
+void APP_LED_BLUE_pulse(void)
+{
+    uint8_t LED_state;
+    
+    LED_state = BLUE_LED_Get();
+    
+    BLUE_LED_Clear();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+    BLUE_LED_Set();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+    BLUE_LED_Clear();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+
+    if (LED_state)
+    {
+        BLUE_LED_Set();        
+    }
+    else
+    {
+        BLUE_LED_Clear();
+    }
+}
+
+void APP_LED_GREEN_pulse(void)
+{
+    uint8_t LED_state;
+    
+    LED_state = GREEN_LED_Get();
+    
+    GREEN_LED_Clear();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+    GREEN_LED_Set();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+    GREEN_LED_Clear();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+
+    if (LED_state)
+    {
+        GREEN_LED_Set();        
+    }
+    else
+    {
+        GREEN_LED_Clear();
+    }
+}
+
+void APP_LED_RED_pulse(void)
+{
+    uint8_t LED_state;
+    
+    LED_state = RED_LED_Get();
+    
+    RED_LED_Clear();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+    RED_LED_Set();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+    RED_LED_Clear();
+    vTaskDelay(LED_PULSE_DELAY_MSEC);
+
+    if (LED_state)
+    {
+        RED_LED_Set();        
+    }
+    else
+    {
+        RED_LED_Clear();
+    }
+}
 
 void CAN_Receive_Callback(void)
 {
@@ -129,7 +186,7 @@ void APP_ReceiveMessage_Tasks()
     {
         DRV_CANFDSPI_ReceiveMessageGet(DRV_CANFDSPI_INDEX_0, APP_RX_FIFO, &canMsg->msgObj.rxObj, canMsg->can_data, MAX_DATA_BYTES);
 #ifdef ENABLE_CONSOLE_PRINT
-        SYS_CONSOLE_PRINT("New Message Received from CAN BUS\r\nMessage ID: 0x%X, DLC: 0x%X\r\nMessage: ", (canMsg->msgObj.rxObj.bF.id.EID + canMsg->msgObj.rxObj.bF.id.SID), canMsg->msgObj.rxObj.bF.ctrl.DLC);
+        SYS_CONSOLE_PRINT("New Message Received from CAN BUS\r\n * ID: 0x%X\r\n * DLC: 0x%X\r\n * Data: ", (canMsg->msgObj.rxObj.bF.id.EID + canMsg->msgObj.rxObj.bF.id.SID), canMsg->msgObj.rxObj.bF.ctrl.DLC);
 
         for(uint8_t i = 0; i<canMsg->msgObj.rxObj.bF.ctrl.DLC; i++)
         {
@@ -224,12 +281,14 @@ void APP_CANFDSPI_Init()
 void PrintBtAddress(uint8_t *addr)
 {
     uint8_t i;
-    SYS_CONSOLE_PRINT("Addr: ");
+#ifdef ENABLE_CONSOLE_PRINT
+    SYS_CONSOLE_PRINT("BT Addr: ");
     for(i = 0; i < GAP_MAX_BD_ADDRESS_LEN; i++)
     {
         SYS_CONSOLE_PRINT("%02X",addr[5-i]);
     }
     SYS_CONSOLE_PRINT("\r\n");
+#endif
 }
 
 bool APP_TestRamAccess(void)
@@ -277,7 +336,7 @@ void APP_TransmitMessageQueue(CAN_MSG_t *canMsg)
         if (attempts == 0)
         {
             DRV_CANFDSPI_ErrorCountStateGet(DRV_CANFDSPI_INDEX_0, &tec, &rec, &errorFlags);
-            SYS_CONSOLE_PRINT("[CAN] Tx Failed: 0x%X\r\n",errorFlags);
+            SYS_CONSOLE_PRINT("[CAN] Transmit Failed: 0x%X\r\n", errorFlags);
             return;
         }
         attempts--;
@@ -288,14 +347,14 @@ void APP_TransmitMessageQueue(CAN_MSG_t *canMsg)
     uint8_t n = DRV_CANFDSPI_DlcToDataBytes(canMsg->msgObj.txObj.bF.ctrl.DLC);
 
     DRV_CANFDSPI_TransmitChannelLoad(DRV_CANFDSPI_INDEX_0, APP_TX_FIFO, &canMsg->msgObj.txObj, canMsg->can_data, n, true);
-    GREEN_LED_Clear();
+
 #ifdef ENABLE_CONSOLE_PRINT
-    SYS_CONSOLE_PRINT("New Message Received from BLE\r\nMessage ID: 0x%X, DLC: 0x%X\r\nMessage: ", (canMsg->msgObj.txObj.bF.id.EID + canMsg->msgObj.txObj.bF.id.SID), canMsg->msgObj.txObj.bF.ctrl.DLC);
+    SYS_CONSOLE_PRINT("[CAN] Transmit Message: { ID = 0x%X | DLC = 0x%X | Data = ", (canMsg->msgObj.txObj.bF.id.EID + canMsg->msgObj.txObj.bF.id.SID), canMsg->msgObj.txObj.bF.ctrl.DLC);
     for(uint8_t i = 0; i<canMsg->msgObj.txObj.bF.ctrl.DLC; i++)
     {
         SYS_CONSOLE_PRINT(" 0x%X",canMsg->can_data[i]);
     }
-    SYS_CONSOLE_PRINT("\r\n[CAN] TX Done\r\n");
+    SYS_CONSOLE_PRINT(" }\r\n");
 #endif
 }
 
@@ -341,7 +400,7 @@ void APP_Tasks ( void )
     APP_Msg_T    appMsg[1];
     APP_Msg_T   *p_appMsg;
     p_appMsg=appMsg;
-
+        
     /* Check the application's current state. */
     switch ( appData.state )
     {
@@ -401,21 +460,21 @@ void APP_Tasks ( void )
                 }
                 else if (p_appMsg->msgId==APP_MSG_CAN_RECV_CB)
                 {
-                    BLUE_LED_Set();
+                    APP_LED_BLUE_pulse();
                     APP_ReceiveMessage_Tasks();
                 }
                 else if(p_appMsg->msgId==APP_MSG_BLE_TX_CAN_RX_EVT)
                 {
-                    BLUE_LED_Clear();
+                    APP_LED_GREEN_pulse();
                     CAN_MSG_t *canMsg = (CAN_MSG_t *)&p_appMsg->msgData;
                     uint8_t size = sizeof(CAN_RX_MSGOBJ) + canMsg->msgObj.rxObj.bF.ctrl.DLC;
                     BLE_TRSPS_SendData(conn_hdl, size, p_appMsg->msgData);
                 }
                 else if (p_appMsg->msgId==APP_MSG_BLE_RX_CAN_TX_EVT)
                 {
-                    GREEN_LED_Set();
-                    CAN_MSG_t *canMsg = (CAN_MSG_t *)&p_appMsg->msgData[1];
-                    APP_TransmitMessageQueue(canMsg);
+                    //APP_LED_BLUE_pulse();
+                    //CAN_MSG_t *canMsg = (CAN_MSG_t *)&p_appMsg->msgData[1];
+                    //APP_TransmitMessageQueue(canMsg);
                 }
             }
             break;

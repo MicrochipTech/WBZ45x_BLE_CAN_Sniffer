@@ -33,6 +33,7 @@ This document describes how to program a Microchip WBZ45x BLE SoC certified RF m
 - [Program Demo Firmware](#program-demo-firmware)
 - [Connect to Smartphone App](#connect-to-smartphone-app)
 - [Testing Procedure](#testing-procedure)
+- [Transparent UART Service](#transparent-uart-service)
 
 ## Hardware Requirements
 
@@ -168,6 +169,7 @@ Embedded software development tools need to be installed in order to properly pr
 
 3. Press the RESET button on the WBZ451 Curiosity development board and confirm that the application firmware outputs a couple of opening messages to the serial terminal window.
 
+    <img src=".//media/WBZ451_Curiosity_Reset.png" width=250/>
     <img src=".//media/terminal_reset.png" width=600/>
 
 4. Launch the PCAN-View PC application.
@@ -185,8 +187,9 @@ Embedded software development tools need to be installed in order to properly pr
 
         <img src=".//media/PCAN-View_StandardMesg.png" width=400/>
 
-7. Confirm that the **standard** CAN message transmissions are received and displayed in the Microchip Bluetooth Data (MBD) smartphone app.
+7. Whenever a valid CAN message has been received from the CAN controller, the RGB LED on the WBZ451 Curiosity board should momentarily flash **blue**. Confirm that the **standard** CAN message transmissions are received and displayed in the Microchip Bluetooth Data (MBD) smartphone app.
 
+    <img src=".//media/WBZ451_RGBLED_Blue.png" width=300/>
     <img src=".//media/MBD_APP_Characteristics_Standard.png" width=300/>
 
 8. Create/transmit a new **extended frame** CAN message by selecting `File > New Message` in the PCAN-View's main toolbar. In the **New Transmit Message** pop-up window:
@@ -199,10 +202,62 @@ Embedded software development tools need to be installed in order to properly pr
 
         <img src=".//media/PCAN-View_ExtendedMesg.png" width=400/>
 
-9. Confirm that the **extended frame** CAN message transmissions are received and displayed in the Microchip Bluetooth Data (MBD) smartphone app.
+9. Whenever a valid CAN message has been received from the CAN controller, the RGB LED on the WBZ451 Curiosity board should momentarily flash **blue**. Confirm that the **extended frame** CAN message transmissions are received and displayed in the Microchip Bluetooth Data (MBD) smartphone app.
 
+    <img src=".//media/WBZ451_RGBLED_Blue.png" width=300/>
     <img src=".//media/MBD_APP_Characteristics_Extended.png" width=300/>
 
-The following video shows the overall process of connecting to the Smartphone and viewing messages received on the CAN bus connected to the BLE SoC:
+10. Back out of the current screen in the mobile app and hit `DISCONNECT` in the top right corner. Back out of the current screen 2 more times to return to the main menu of the Microchip Bluetooth Data app.
 
-![Alt Text](media/MBD_CAN.gif)
+11. Starting at the main menu of the MBD app, select `BLE UART` > `PIC32CXBZ` > `SCAN`. `CAN BLE Bridge` should show up in the list of devices; hit `CANCEL` to stop scanning then select `CAN BLE Bridge`. 
+
+    <img src=".//media/MBD_BLEUART.png" width=600/>
+
+12. At the bottom of the screen, select `Text mode`. In the `Enter text here` box, try sending a BLE data message to the WBZ451 Curiosity development board to turn on its RGB LED by sending one or more of the following command strings:
+    ```bash
+    +LED_BLUE:ON
+    +LED_GREEN:ON
+    +LED_RED:ON
+    ```
+    <img src=".//media/MBD_LEDBLUE_ON.jpg" width=250/>
+
+13. Each input into the RGB LED can also be turned off by sending any of the following command strings:
+    ```bash
+    +LED_BLUE:OFF
+    +LED_GREEN:OFF
+    +LED_RED:OFF
+    ```
+
+14. Issue the command to get the status of the 3 inputs to the RGB LED by sending the following command string:
+    ```bash
+    +STATUS:
+    ```
+    <img src=".//media/MBD_RGBLED_STATUS_TX.jpg" width=250/>
+
+15. Confirm that a response was received from the WBZ451 regarding the states of the 3 inputs to the RGB LED. A capital letter means the input is on and lower case letter means the input is off. For example, if only the blue input is on, the format of the response should be
+    ```bash
+    +RGB: r g B
+    ```
+    <img src=".//media/MBD_RGBLED_STATUS_RX.jpg" width=250/>
+
+16. Send any ASCII text string and confirm that the message is displayed in the terminal window.
+
+    <img src=".//media/TeraTerm_HelloWorld.png" width=600/>
+
+17. Initiate the transmission of an example CAN message to the CAN bus (via the CAN controller) by sending the following command string:
+    ```bash
+    +CAN:TX
+    ```
+18. Confirm that the sample CAN message is displayed in the PCAN-View `Receive` tab as well as the terminal window.
+
+    <img src=".//media/PCAN-View_CANTX.png" width=600/>
+    <img src=".//media/TeraTerm_CANTX.png" width=600/>
+
+## Transparent UART Service
+
+This demo application uses Microchip's [Transparent UART Service (TRSPS)](https://developerhelp.microchip.com/xwiki/bin/view/applications/ble/android-development-for-bm70rn4870/transparent-uart-service-for-bm70rn4870/) to transfer data bi-directionally between the BLE Central & Peripheral devices.
+
+As a GATT Server, the WBZ451 module hosts the Microchip Transparent UART Service. The Transparent UART Service provides a simple bidirectional data transfer service. It defines two [Generic Attribute Profile (GATT)](https://software-dl.ti.com/lprf/sdg-latest/html/ble-stack-3.x/gatt.html#:~:text=Generic%20Attribute%20Profile%20Service%20(GATT%20Service),-The%20Generic%20Attribute&text=The%20service%20changed%20characteristic%20is,is%20not%20writeable%20or%20readable.) characteristics for the serial-like data communication:
+
+- **Receiving** data with the **Write** property
+- **Sending** data with the **Notify** property

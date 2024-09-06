@@ -71,7 +71,7 @@ void APP_BleGapEvtHandler(BLE_GAP_Event_T *p_event)
         {
             conn_hdl = p_event->eventField.evtConnect.connHandle;
             USER_LED_Clear();
-            SYS_CONSOLE_PRINT("[BLE]Connected - ");
+            SYS_CONSOLE_PRINT("[BLE] Connected - ");
             extern void PrintBtAddress(uint8_t *addr);
             PrintBtAddress(p_event->eventField.evtConnect.remoteAddr.addr);
         }
@@ -82,7 +82,7 @@ void APP_BleGapEvtHandler(BLE_GAP_Event_T *p_event)
             conn_hdl = 0xFFFF;
             BLE_GAP_SetAdvEnable(true, 0);
 			USER_LED_Set();
-            SYS_CONSOLE_PRINT("[BLE]Disconnected: 0x%x\r\n",p_event->eventField.evtDisconnect.reason);
+            SYS_CONSOLE_PRINT("[BLE] Disconnected: 0x%x\r\n",p_event->eventField.evtDisconnect.reason);
         }
         break;
 
