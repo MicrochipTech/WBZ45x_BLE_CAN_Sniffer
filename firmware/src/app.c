@@ -99,75 +99,6 @@ APP_DATA appData;
 // *****************************************************************************
 // *****************************************************************************
 
-void APP_LED_BLUE_pulse(void)
-{
-    uint8_t LED_state;
-    
-    LED_state = BLUE_LED_Get();
-    
-    BLUE_LED_Clear();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-    BLUE_LED_Set();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-    BLUE_LED_Clear();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-
-    if (LED_state)
-    {
-        BLUE_LED_Set();        
-    }
-    else
-    {
-        BLUE_LED_Clear();
-    }
-}
-
-void APP_LED_GREEN_pulse(void)
-{
-    uint8_t LED_state;
-    
-    LED_state = GREEN_LED_Get();
-    
-    GREEN_LED_Clear();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-    GREEN_LED_Set();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-    GREEN_LED_Clear();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-
-    if (LED_state)
-    {
-        GREEN_LED_Set();        
-    }
-    else
-    {
-        GREEN_LED_Clear();
-    }
-}
-
-void APP_LED_RED_pulse(void)
-{
-    uint8_t LED_state;
-    
-    LED_state = RED_LED_Get();
-    
-    RED_LED_Clear();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-    RED_LED_Set();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-    RED_LED_Clear();
-    vTaskDelay(LED_PULSE_DELAY_MSEC);
-
-    if (LED_state)
-    {
-        RED_LED_Set();        
-    }
-    else
-    {
-        RED_LED_Clear();
-    }
-}
-
 void CAN_Receive_Callback(void)
 {
     APP_Msg_T appCANMsg;
@@ -358,6 +289,7 @@ void APP_TransmitMessageQueue(CAN_MSG_t *canMsg)
 #endif
 }
 
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Initialization and State Machine Functions
@@ -460,19 +392,16 @@ void APP_Tasks ( void )
                 }
                 else if (p_appMsg->msgId==APP_MSG_CAN_RECV_CB)
                 {
-                    APP_LED_BLUE_pulse();
                     APP_ReceiveMessage_Tasks();
                 }
                 else if(p_appMsg->msgId==APP_MSG_BLE_TX_CAN_RX_EVT)
                 {
-                    APP_LED_GREEN_pulse();
                     CAN_MSG_t *canMsg = (CAN_MSG_t *)&p_appMsg->msgData;
                     uint8_t size = sizeof(CAN_RX_MSGOBJ) + canMsg->msgObj.rxObj.bF.ctrl.DLC;
                     BLE_TRSPS_SendData(conn_hdl, size, p_appMsg->msgData);
                 }
                 else if (p_appMsg->msgId==APP_MSG_BLE_RX_CAN_TX_EVT)
                 {
-                    //APP_LED_BLUE_pulse();
                     //CAN_MSG_t *canMsg = (CAN_MSG_t *)&p_appMsg->msgData[1];
                     //APP_TransmitMessageQueue(canMsg);
                 }

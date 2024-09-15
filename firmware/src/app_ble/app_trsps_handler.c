@@ -127,7 +127,6 @@ void APP_TRSPS_command(uint8_t* pWrBuffer, size_t size)
         canMsg.can_data[7] = 0xE;
         // Add CAN message to the Tx queue
         APP_TransmitMessageQueue(&canMsg);
-        APP_LED_BLUE_pulse();
         return;
     }
 }
